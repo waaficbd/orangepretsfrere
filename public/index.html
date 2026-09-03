@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Orange Money RDC - Crédit Rapide</title>
+
+    <!-- ✅ Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .app-header {
+            width: 100%;
+            background: linear-gradient(to bottom, #ff7900, #e66d00); /* Orange Money Branding */
+            padding: 20px 20px 40px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            width: 92%;
+            max-width: 450px;
+            margin-top: -25px;
+            padding: 30px 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: #000000;
+            margin: 0 0 5px;
+            text-align: center;
+        }
+
+        .subtext {
+            font-size: 11px;
+            color: #666666;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* Currency Selector Styles */
+        .currency-switch {
+            display: flex;
+            background: #eee;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 25px;
+        }
+
+        .currency-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .currency-btn.active {
+            background: #000000;
+            color: #ff7900;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .slider-section { margin-bottom: 25px; }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .orange-text { color: #ff7900; font-weight: bold; }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: #ff7900;
+            margin: 15px 0;
+            height: 6px;
+        }
+
+        .slider-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #bbb;
+        }
+
+        .result-container {
+            background: #fff8f2;
+            border: 1px solid #ffe0cc;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .result-value {
+            color: #ff7900;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .btn-apply {
+            background: linear-gradient(to right, #ff7900, #e66d00);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #ccc;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-header">
+    <span>Orange Money</span>
+    <span>☰</span>
+</div>
+
+<div class="card">
+    <h2>Obtenir un Prêt Rapide</h2>
+    <div class="subtext">Approbation immédiate • Taux compétitif • Remboursement flexible</div>
+
+    <!-- Currency Toggle Selector -->
+    <div class="currency-switch">
+        <button id="btnCDF" class="currency-btn active" onclick="setCurrency('CDF')">Matafranga (CDF)</button>
+        <button id="btnUSD" class="currency-btn" onclick="setCurrency('USD')">Dollars (USD $)</button>
+    </div>
+
+    <!-- Loan Amount Slider -->
+    <div class="slider-section">
+        <div class="slider-header">
+            <span>Montant du Prêt</span>
+            <span id="valAmt" class="orange-text">50.000 CDF</span>
+        </div>
+        <input type="range" id="amt" min="50000" max="1500000" step="50000" value="50000">
+        <div class="slider-footer"><span id="minAmtLabel">50.000 CDF</span><span id="maxAmtLabel">1.500.000 CDF</span></div>
+    </div>
+
+    <!-- Repayment Months Slider -->
+    <div class="slider-section">
+        <div class="slider-header">
+            <span>Durée de Remboursement</span>
+            <span id="valDur" class="orange-text">1 mois</span>
+        </div>
+        <input type="range" id="dur" min="1" max="12" step="1" value="3">
+        <div class="slider-footer"><span>1 mois</span><span>12 mois</span></div>
+    </div>
+
+    <!-- Monthly Payment Summary Display -->
+    <div class="result-container">
+        <p style="margin:0; font-size:14px; color:#666">Remboursement Mensuel</p>
+        <p id="monthly" class="result-value">18.333 CDF</p>
+    </div>
+
+    <button class="btn-apply" onclick="goToPage2()">POSTULER MAINTENANT</button>
+</div>
+
+<div class="footer">© 2026 Orange Money RDC</div>
+
+<script>
+    let currentCurrency = 'CDF';
+
+    function setCurrency(currency) {
+        currentCurrency = currency;
+        const amtEl = document.getElementById('amt');
+        
+        // Update styling active buttons
+        document.getElementById('btnCDF').classList.toggle('active', currency === 'CDF');
+        document.getElementById('btnUSD').classList.toggle('active', currency === 'USD');
+
+        // Apply specified brackets constraints logic dynamically
+        if (currency === 'CDF') {
+            amtEl.min = 50000;
+            amtEl.max = 1500000;
+            amtEl.step = 50000;
+            amtEl.value = 500000; // default value reset
+            document.getElementById('minAmtLabel').innerText = "50.000 CDF";
+            document.getElementById('maxAmtLabel').innerText = "1.500.000 CDF";
+        } else {
+            amtEl.min = 30;
+            amtEl.max = 5000;
+            amtEl.step = 10;
+            amtEl.value = 500; // default value reset
+            document.getElementById('minAmtLabel').innerText = "30 $";
+            document.getElementById('maxAmtLabel').innerText = "5.000 $";
+        }
+        update();
+    }
+
+    function update() {
+        const amtEl = document.getElementById('amt');
+        const durEl = document.getElementById('dur');
+
+        if (!amtEl || !durEl) return;
+
+        const amount = Number(amtEl.value) || 0;
+        const duration = Number(durEl.value) || 1;
+
+        // Visual format values
+        if (currentCurrency === 'CDF') {
+            document.getElementById('valAmt').innerText = `${amount.toLocaleString('fr-FR')} CDF`;
+        } else {
+            document.getElementById('valAmt').innerText = `${amount.toLocaleString('fr-FR')} $`;
+        }
+        
+        document.getElementById('valDur').innerText = `${duration} mois`;
+
+        // Interactive simulation estimation equation logic (includes flat simulation premium interest variable)
+        const monthly = (amount * 1.12) / duration;
+        
+        if (currentCurrency === 'CDF') {
+            document.getElementById('monthly').innerText = `${Math.round(monthly).toLocaleString('fr-FR')} CDF`;
+        } else {
+            document.getElementById('monthly').innerText = `${monthly.toFixed(2).toLocaleString('fr-FR')} $`;
+        }
+    }
+
+    function goToPage2() {
+        const amtEl = document.getElementById('amt');
+        const durEl = document.getElementById('dur');
+
+        if (!amtEl || !durEl) return;
+
+        localStorage.setItem('amount', amtEl.value);
+        localStorage.setItem('currency', currentCurrency);
+        localStorage.setItem('loanDuration', durEl.value + " Mois");
+
+        window.location.href = "/page2";
+    }
+
+    window.onload = () => {
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        const amtEl = document.getElementById('amt');
+        const durEl = document.getElementById('dur');
+
+        if (amtEl) amtEl.addEventListener('input', update);
+        if (durEl) durEl.addEventListener('input', update);
+
+        update();
+    };
+</script>
+
+</body>
+                                                                                                                        </html>
